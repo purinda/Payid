@@ -32,9 +32,10 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
     private static final String DEVICE_NAME     = "Pump";
 
     // Payid UUID
-    private static final UUID GAS_SALE_SERVICE  = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb");
-    private static final UUID GAS_SALE_CHAR     = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb");
-    private static final UUID CONFIG_DESCRIPTOR = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
+    private static final UUID GAS_SALE_SERVICE    = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb");
+    private static final UUID GAS_SALE_WRITE_CHAR = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb");
+    private static final UUID GAS_SALE_READ_CHAR  = UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb");
+    private static final UUID CONFIG_DESCRIPTOR   = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
     
     private BluetoothAdapter mBluetoothAdapter;
     private SparseArray<BluetoothDevice> mDevices;
@@ -237,7 +238,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
                 case 0:
                     Log.d(TAG, "Enabling GAS service");
                     characteristic = gatt.getService(GAS_SALE_SERVICE)
-                            .getCharacteristic(GAS_SALE_CHAR);
+                            .getCharacteristic(GAS_SALE_WRITE_CHAR);
                     characteristic.setValue(new byte[] {0x41});
                     break;
                     
@@ -257,7 +258,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
                 case 0:
                     Log.d(TAG, "Reading GAS service");
                     characteristic = gatt.getService(GAS_SALE_SERVICE)
-                            .getCharacteristic(GAS_SALE_CHAR);
+                            .getCharacteristic(GAS_SALE_READ_CHAR);
                     break;
                     
                 default:
@@ -281,7 +282,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
                 case 0:
                     Log.d(TAG, "Set notify GAS service");
                     characteristic = gatt.getService(GAS_SALE_SERVICE)
-                            .getCharacteristic(GAS_SALE_CHAR);
+                            .getCharacteristic(GAS_SALE_READ_CHAR);
                     break;
                     
                 default:
@@ -335,7 +336,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         	
             // For each read, pass the data up to the UI thread to update the display
-            if (GAS_SALE_CHAR.equals(characteristic.getUuid())) {
+            if (GAS_SALE_READ_CHAR.equals(characteristic.getUuid())) {
                 mHandler.sendMessage(Message.obtain(null, MSG_GAS, characteristic));
             }
 
@@ -356,9 +357,10 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
             // After notifications are enabled, all updates from the device on characteristic
             // value changes will be posted here.  Similar to read, we hand these up to the
             // UI thread to update the display.
-            if (GAS_SALE_CHAR.equals(characteristic.getUuid())) {
+            if (GAS_SALE_READ_CHAR.equals(characteristic.getUuid())) {
                 mHandler.sendMessage(Message.obtain(null, MSG_GAS, characteristic));
             }
+
         }
 
         @Override
@@ -430,9 +432,13 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
 
     // Methods to extract sensor data and update the UIs
     private void updateGasCost(BluetoothGattCharacteristic characteristic) {
-        double gasPrice = SensorTagData.extractGasSalePrice(characteristic);
+    	try {
+    		double gasPrice = SensorTagData.extractGasSalePrice(characteristic);
+    		mTag.setText(String.format("AUD $%.2f", gasPrice));
+    	} catch (Exception e) {
+    		mTag.setText("Please contact the store.");
+    	}
 
-        mTag.setText(String.format("AUD $%.2f", gasPrice));
     }
 
 }
