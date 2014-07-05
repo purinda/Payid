@@ -47,8 +47,11 @@
         android:layout_alignParentLeft="false"
         android:layout_below="@+id/label_tagname"
         android:layout_centerInParent="true"
+        android:indeterminate="true"
+        android:max="100"
         android:maxWidth="42dp"
         android:padding="42dp"
+        android:progress="25"
         android:visibility="visible" />
 
     <TextView
@@ -61,6 +64,16 @@
         android:textAlignment="center"
         android:textAllCaps="false"
         android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="45sp"
         android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/buttonPay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/label_bump"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="112dp"
+        android:text="Pay" />
 
 </RelativeLayout>

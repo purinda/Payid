@@ -19,7 +19,9 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,12 +31,13 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
 	
 	// Debug tag
     private static final String TAG             = "Payid";
-    private static final String DEVICE_NAME     = "PayidTag";
+    private static final String DEVICE_NAME     = "Pump ";
 
     // Payid UUID
-    private static final UUID GAS_SALE_SERVICE  = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb");
-    private static final UUID GAS_SALE_CHAR     = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb");
-    private static final UUID CONFIG_DESCRIPTOR = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
+    private static final UUID GAS_SALE_SERVICE    = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb");
+    private static final UUID GAS_SALE_READ_CHAR  = UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb");
+    private static final UUID GAS_SALE_WRITE_CHAR = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb");
+    private static final UUID CONFIG_DESCRIPTOR   = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
     
     private BluetoothAdapter mBluetoothAdapter;
     private SparseArray<BluetoothDevice> mDevices;
@@ -58,6 +61,19 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
 
         mDevices = new SparseArray<BluetoothDevice>();
 
+        final Button button = (Button) findViewById(R.id.buttonPay);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+            	BluetoothGattCharacteristic characteristic;
+            	
+                // Perform action on click
+                characteristic = mConnectedGatt.getService(GAS_SALE_SERVICE).getCharacteristic(GAS_SALE_WRITE_CHAR);
+            	characteristic.setValue(new String("Paid " + mTag.getText()).getBytes());
+            	mConnectedGatt.writeCharacteristic(characteristic);
+            }
+        });
+
+        
         // A progress dialog will be needed while the connection process is
         // taking place
         mProgress = new ProgressDialog(this);
@@ -72,7 +88,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         // We need to enforce that Bluetooth is first enabled, and take the
         // user to settings to enable it if they have not done so.
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
-            //Bluetooth is disabled
+            // Bluetooth is disabled
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivity(enableBtIntent);
             finish();
@@ -96,10 +112,10 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
     protected void onPause() {
         super.onPause();
         
-        //Make sure dialog is hidden
+        // Make sure dialog is hidden
         mProgress.dismiss();
         
-        //Cancel any scans in progress
+        // Cancel any scans in progress
         mHandler.removeCallbacks(mStopRunnable);
         mHandler.removeCallbacks(mStartRunnable);
         mBluetoothAdapter.stopLeScan(this);
@@ -109,7 +125,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
     protected void onStop() {
         super.onStop();
         
-        //Disconnect from any active tag connection
+        // Disconnect from any active tag connection
         if (mConnectedGatt != null) {
             mConnectedGatt.disconnect();
             mConnectedGatt = null;
@@ -125,7 +141,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         // Add any device elements we've discovered to the overflow menu
         for (int i=0; i < mDevices.size(); i++) {
             BluetoothDevice device = mDevices.valueAt(i);
-            menu.add(0, mDevices.keyAt(i), 0, device.getName().substring(0, DEVICE_NAME.length()));
+            menu.add(0, mDevices.keyAt(i), 0, device.getName().substring(0, DEVICE_NAME.length() + 1));
         }
 
         return true;
@@ -137,7 +153,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
             case R.id.menu_refresh:
             	Log.d(TAG, "Refresh menu clicked");
             	
-                mDevices.clear();                
+                mDevices.clear();
                 startScan();
                 return true;
                 
@@ -180,7 +196,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         mBluetoothAdapter.startLeScan(this);
         setProgressBarIndeterminateVisibility(true);
 
-        mHandler.postDelayed(mStopRunnable, 2500);
+        mHandler.postDelayed(mStopRunnable, 1000);
     }
 
     private void stopScan() {
@@ -195,10 +211,10 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
         Log.i(TAG, "New LE Device: " + device.getName() + " @ " + rssi);
         
-        // Get items within a 0.5m radius (~<-55dBm)       
-        if (rssi > -60) {
-        	return;
-        }
+        // Get items within a 20cm radius (~<-40dBm)       
+       if (rssi <= -40) {
+    	   return;
+       }
         
         // We are looking for PayidTag devices only, so validate the name
         // that each device reports before adding it to our collection
@@ -237,8 +253,8 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
                 case 0:
                     Log.d(TAG, "Enabling GAS service");
                     characteristic = gatt.getService(GAS_SALE_SERVICE)
-                            .getCharacteristic(GAS_SALE_CHAR);
-                    characteristic.setValue(new byte[] {0x41});
+                            .getCharacteristic(GAS_SALE_WRITE_CHAR);
+                    characteristic.setValue(new byte[] {0x01});
                     break;
                     
                 default:
@@ -246,7 +262,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
                     Log.i(TAG, "All Sensors Enabled");
                     return;
             }
-
+            
             gatt.writeCharacteristic(characteristic);
         }
 
@@ -257,7 +273,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
                 case 0:
                     Log.d(TAG, "Reading GAS service");
                     characteristic = gatt.getService(GAS_SALE_SERVICE)
-                            .getCharacteristic(GAS_SALE_CHAR);
+                            .getCharacteristic(GAS_SALE_READ_CHAR);
                     break;
                     
                 default:
@@ -265,8 +281,11 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
                     Log.i(TAG, "All Sensors Enabled");
                     return;
             }
-
+            
             gatt.readCharacteristic(characteristic);
+
+            // Enabled characteristic notifications
+            this.setNotifyNextSensor(gatt);
         }
 
         // Enable notification of changes on the data characteristic for each sensor
@@ -278,7 +297,8 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
                 case 0:
                     Log.d(TAG, "Set notify GAS service");
                     characteristic = gatt.getService(GAS_SALE_SERVICE)
-                            .getCharacteristic(GAS_SALE_CHAR);
+                            .getCharacteristic(GAS_SALE_READ_CHAR);
+                    
                     break;
                     
                 default:
@@ -287,10 +307,10 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
                     return;
             }
 
-            //Enable local notifications
+            // Enable local notifications
             gatt.setCharacteristicNotification(characteristic, true);
-            
-            //Enabled remote notifications
+
+            // Enabled remote notifications
             BluetoothGattDescriptor desc = characteristic.getDescriptor(CONFIG_DESCRIPTOR);
             desc.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             gatt.writeDescriptor(desc);
@@ -332,12 +352,14 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         	
             // For each read, pass the data up to the UI thread to update the display
-            if (GAS_SALE_CHAR.equals(characteristic.getUuid())) {
+            if (GAS_SALE_READ_CHAR.equals(characteristic.getUuid())) {
                 mHandler.sendMessage(Message.obtain(null, MSG_GAS, characteristic));
             }
 
             // After reading the initial value, next we enable notifications
             setNotifyNextSensor(gatt);
+            
+            Log.d(TAG, "Gas Sale characteristic read.");
         }
 
         @Override
@@ -353,15 +375,18 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
             // After notifications are enabled, all updates from the device on characteristic
             // value changes will be posted here.  Similar to read, we hand these up to the
             // UI thread to update the display.
-            if (GAS_SALE_CHAR.equals(characteristic.getUuid())) {
+            if (GAS_SALE_READ_CHAR.equals(characteristic.getUuid())) {
+            	Log.d(TAG, "Gas Sale characteristic changed.");
                 mHandler.sendMessage(Message.obtain(null, MSG_GAS, characteristic));
             }
+            
+            Log.d(TAG, "Gas Sale characteristic changed.");
         }
 
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         	
-            //Once notifications are enabled, we move to the next sensor and start over with enable
+            // Once notifications are enabled, we move to the next sensor and start over with enable
             advance();
             enableNextSensor(gatt);
         }
@@ -398,7 +423,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         public void handleMessage(Message msg) {
             BluetoothGattCharacteristic characteristic;
             switch (msg.what) {
-                case MSG_GAS:
+                case MSG_GAS: 	
                     characteristic = (BluetoothGattCharacteristic) msg.obj;
                     if (characteristic.getValue() == null) {
                         Log.w(TAG, "Error obtaining GAS price value");
@@ -427,9 +452,9 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
 
     // Methods to extract sensor data and update the UIs
     private void updateGasCost(BluetoothGattCharacteristic characteristic) {
-        double gasPrice = SensorTagData.extractGasSalePrice(characteristic);
-
-        mTag.setText(String.format("AUD $%.2f", gasPrice));
+//    	Log.d(TAG, new String(characteristic.getValue()));
+//        double gasPrice = SensorTagData.extractGasSalePrice(characteristic);
+//        mTag.setText(String.format("AUD $%.2f", gasPrice));
     }
 
 }
