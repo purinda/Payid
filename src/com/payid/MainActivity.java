@@ -29,7 +29,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
 	
 	// Debug tag
     private static final String TAG             = "Payid";
-    private static final String DEVICE_NAME     = "PayidTag";
+    private static final String DEVICE_NAME     = "Pump";
 
     // Payid UUID
     private static final UUID GAS_SALE_SERVICE  = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb");
@@ -125,7 +125,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         // Add any device elements we've discovered to the overflow menu
         for (int i=0; i < mDevices.size(); i++) {
             BluetoothDevice device = mDevices.valueAt(i);
-            menu.add(0, mDevices.keyAt(i), 0, device.getName().substring(0, DEVICE_NAME.length()));
+            menu.add(0, mDevices.keyAt(i), 0, device.getName().substring(0, device.getName().length()));
         }
 
         return true;
@@ -267,6 +267,9 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
             }
 
             gatt.readCharacteristic(characteristic);
+            
+            // Enable notifications
+            this.setNotifyNextSensor(gatt);
         }
 
         // Enable notification of changes on the data characteristic for each sensor
@@ -298,7 +301,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
 
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            Log.d(TAG, "Connection State Change: "+status+" -> "+connectionState(newState));
+            Log.d(TAG, "Connection State Change: " + status + " -> "+connectionState(newState));
             if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
                 
                 // Once successfully connected, we must next discover all the services on the
