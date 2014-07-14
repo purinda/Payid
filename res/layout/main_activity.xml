@@ -14,66 +14,10 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/RelativeLayout1"
+<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/list"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:textAlignment="center" >
+    android:textAlignment="center" xmlns:android1="http://schemas.android.com/apk/res/android">
 
-    <Space
-        android:id="@+id/Space1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true" />
-
-    <TextView
-        android:id="@+id/label_bump"
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_alignParentTop="true"
-        android:gravity="center|bottom"
-        android:text="@string/label_bump"
-        android:textAlignment="center"
-        android:textAllCaps="false"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textStyle="bold" />
-
-    <ProgressBar
-        android:id="@+id/spinner"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_alignParentLeft="false"
-        android:layout_below="@+id/label_tagname"
-        android:layout_centerInParent="true"
-        android:indeterminate="true"
-        android:max="100"
-        android:maxWidth="42dp"
-        android:padding="42dp"
-        android:progress="25"
-        android:visibility="visible" />
-
-    <TextView
-        android:id="@+id/label_tagname"
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_alignParentBottom="true"
-        android:gravity="top|center"
-        android:text="@string/label_tagname"
-        android:textAlignment="center"
-        android:textAllCaps="false"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textSize="45sp"
-        android:textStyle="bold" />
-
-    <Button
-        android:id="@+id/buttonPay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/label_bump"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="112dp"
-        android:text="Pay" />
-
-</RelativeLayout>
+</ListView>

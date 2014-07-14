@@ -17,7 +17,9 @@
     <string name="app_name">Payid</string>
 
     <!-- Menu items -->
-    <string name="menu_refresh">Refresh</string>
+    
     <string name="label_bump">Bump with the Payid</string>
     <string name="label_tagname">Searching...</string>
+    <string name="menu_stop">Stop</string><string name="menu_refresh">Refresh</string>
+    <string name="menu_scan">Scan</string>
 </resources>
